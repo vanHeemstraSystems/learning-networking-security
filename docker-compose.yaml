@@ -1,0 +1,285 @@
+version: ‘3.8’
+
+services:
+
+# ======================
+
+# ATTACKER MACHINE
+
+# ======================
+
+kali-attacker:
+image: kalilinux/kali-rolling
+container_name: kali-attacker
+hostname: kali-attacker
+tty: true
+stdin_open: true
+networks:
+security-lab:
+ipv4_address: 172.20.0.5
+volumes:
+- ./shared:/shared
+- ./scripts:/scripts
+environment:
+- TERM=xterm-256color
+command: >
+bash -c “
+apt update &&
+apt install -y nmap netcat-traditional curl wget dnsutils net-tools iputils-ping tcpdump nikto sqlmap hydra metasploit-framework &&
+echo ‘Security Lab Attacker Container Ready’ &&
+echo ‘Available tools: nmap, nikto, sqlmap, hydra, metasploit’ &&
+echo ‘Target network: 172.20.0.0/16’ &&
+tail -f /dev/null
+“
+cap_add:
+- NET_ADMIN
+- NET_RAW
+
+# ======================
+
+# WEB VULNERABILITIES
+
+# ======================
+
+# DVWA - Damn Vulnerable Web Application
+
+dvwa:
+image: vulnerables/web-dvwa
+container_name: dvwa
+hostname: dvwa
+networks:
+security-lab:
+ipv4_address: 172.20.0.10
+ports:
+- “8001:80”
+depends_on:
+- dvwa-db
+environment:
+- MYSQL_HOST=dvwa-db
+- MYSQL_DATABASE=dvwa
+- MYSQL_USER=dvwa
+- MYSQL_PASSWORD=dvwa
+
+dvwa-db:
+image: mysql:5.7
+container_name: dvwa-db
+hostname: dvwa-db
+networks:
+security-lab:
+ipv4_address: 172.20.0.11
+environment:
+- MYSQL_ROOT_PASSWORD=root
+- MYSQL_DATABASE=dvwa
+- MYSQL_USER=dvwa
+- MYSQL_PASSWORD=dvwa
+volumes:
+- dvwa-db-data:/var/lib/mysql
+
+# WebGoat - OWASP Security Training
+
+webgoat:
+image: webgoat/webgoat
+container_name: webgoat
+hostname: webgoat
+networks:
+security-lab:
+ipv4_address: 172.20.0.30
+ports:
+- “8002:8080”
+- “9090:9090”
+environment:
+- WEBGOAT_HOST=0.0.0.0
+- WEBGOAT_PORT=8080
+
+# bWAPP - Buggy Web Application
+
+bwapp:
+image: raesene/bwapp
+container_name: bwapp
+hostname: bwapp
+networks:
+security-lab:
+ipv4_address: 172.20.0.35
+ports:
+- “8003:80”
+
+# Juice Shop - Modern Insecure Web App
+
+juiceshop:
+image: bkimminich/juice-shop
+container_name: juiceshop
+hostname: juiceshop
+networks:
+security-lab:
+ipv4_address: 172.20.0.36
+ports:
+- “8004:3000”
+
+# ======================
+
+# NETWORK SERVICES
+
+# ======================
+
+# Vulnerable SSH Server
+
+ssh-target:
+image: linuxserver/openssh-server
+container_name: ssh-target
+hostname: ssh-target
+networks:
+security-lab:
+ipv4_address: 172.20.0.40
+ports:
+- “2222:2222”
+environment:
+- PUID=1000
+- PGID=1000
+- PASSWORD_ACCESS=true
+- USER_PASSWORD=password123
+- USER_NAME=admin
+- SUDO_ACCESS=true
+
+# Vulnerable FTP Server
+
+ftp-target:
+image: fauria/vsftpd
+container_name: ftp-target
+hostname: ftp-target
+networks:
+security-lab:
+ipv4_address: 172.20.0.50
+ports:
+- “20:20”
+- “21:21”
+- “21100-21110:21100-21110”
+environment:
+- FTP_USER=ftpuser
+- FTP_PASS=ftppass
+- PASV_ADDRESS=172.20.0.50
+- PASV_MIN_PORT=21100
+- PASV_MAX_PORT=21110
+volumes:
+- ftp-data:/home/vsftpd
+
+# Vulnerable Telnet Server
+
+telnet-target:
+image: alpine:latest
+container_name: telnet-target
+hostname: telnet-target
+networks:
+security-lab:
+ipv4_address: 172.20.0.60
+ports:
+- “23:23”
+command: >
+sh -c “
+apk add –no-cache busybox-extras &&
+adduser -D -s /bin/sh testuser &&
+echo ‘testuser:testpass’ | chpasswd &&
+telnetd -F -l /bin/login
+“
+
+# Vulnerable MySQL Database
+
+mysql-target:
+image: mysql:5.7
+container_name: mysql-target
+hostname: mysql-target
+networks:
+security-lab:
+ipv4_address: 172.20.0.70
+ports:
+- “3306:3306”
+environment:
+- MYSQL_ROOT_PASSWORD=root
+- MYSQL_DATABASE=testdb
+- MYSQL_USER=dbuser
+- MYSQL_PASSWORD=dbpass
+volumes:
+- mysql-data:/var/lib/mysql
+
+# Vulnerable PostgreSQL
+
+postgres-target:
+image: postgres:12
+container_name: postgres-target
+hostname: postgres-target
+networks:
+security-lab:
+ipv4_address: 172.20.0.75
+ports:
+- “5432:5432”
+environment:
+- POSTGRES_PASSWORD=postgres
+- POSTGRES_USER=postgres
+- POSTGRES_DB=testdb
+
+# Vulnerable Redis
+
+redis-target:
+image: redis:6
+container_name: redis-target
+hostname: redis-target
+networks:
+security-lab:
+ipv4_address: 172.20.0.80
+ports:
+- “6379:6379”
+command: redis-server –requirepass weakredispass
+
+# Vulnerable MongoDB
+
+mongodb-target:
+image: mongo:4.4
+container_name: mongodb-target
+hostname: mongodb-target
+networks:
+security-lab:
+ipv4_address: 172.20.0.85
+ports:
+- “27017:27017”
+environment:
+- MONGO_INITDB_ROOT_USERNAME=admin
+- MONGO_INITDB_ROOT_PASSWORD=mongopass
+
+# ======================
+
+# MONITORING
+
+# ======================
+
+# Network traffic visualization (optional)
+
+wireshark:
+image: lscr.io/linuxserver/wireshark
+container_name: wireshark
+hostname: wireshark
+networks:
+security-lab:
+ipv4_address: 172.20.0.90
+ports:
+- “3000:3000”
+environment:
+- PUID=1000
+- PGID=1000
+cap_add:
+- NET_ADMIN
+volumes:
+- ./captures:/captures
+
+networks:
+security-lab:
+driver: bridge
+ipam:
+driver: default
+config:
+- subnet: 172.20.0.0/16
+gateway: 172.20.0.1
+
+volumes:
+dvwa-db-data:
+ftp-data:
+mysql-data:
+shared:
