@@ -1,0 +1,129 @@
+# Python
+
+**pycache**/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+venv/
+ENV/
+env/
+
+# Security Testing Data
+
+*.pcap
+*.pcapng
+*.cap
+captures/
+*.log
+*.txt
+scan_results/
+findings/
+
+# Docker Lab
+
+docker-lab/shared/*
+!docker-lab/shared/.gitkeep
+docker-lab/backups/
+docker-lab/captures/
+
+# Sensitive Information
+
+*.key
+*.pem
+*.crt
+*.der
+*.p12
+*.pfx
+passwords.txt
+credentials.txt
+secrets/
+.env
+
+# Database dumps
+
+*.sql
+*.db
+*.sqlite
+*.dump
+
+# Metasploit
+
+.msf4/
+*.rc.local
+
+# Burp Suite
+
+burp-*.jar
+burp_projects/
+*.burp
+
+# IDE and Editors
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS Files
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Temporary Files
+
+tmp/
+temp/
+*.tmp
+
+# Reports (unless specifically committed)
+
+reports/*.pdf
+reports/*.docx
+reports/*.html
+
+# Large files
+
+*.iso
+*.ova
+*.vmdk
+
+# Test results
+
+test_output/
+test_results/
+
+# Notes (if containing sensitive info)
+
+private_notes/
+personal/
+
+# Docker volumes
+
+docker-lab/mysql-data/
+docker-lab/postgres-data/
+docker-lab/ftp-data/
